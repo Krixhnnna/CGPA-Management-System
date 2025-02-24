@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPU Verse - Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">LPU Verse <span class="blink"></span></div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="Rank.html">Check Rank</a>
+            <a href="CGPA.html">Check CGPA</a>
+            <a href="calculator.html">CGPA Calculator</a>
+            <a href="about.html">About</a>
+        </div>
+        <div class="menu-btn">☰</div>
+    </nav>
+    <div class="search-container">
+        <input type="text" id="search" oninput="searchStudent()" placeholder="Search by Name, Reg. No, or Section">
+    </div>
+    <p class="main-text">Search Your Name Above To Check Your Rank and CGPA</p>
+    <a class="ab" href="about.html">Click Here To Know About Me!</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Section</th>
+                <th>CGPA</th>
+            </tr>
+        </thead>
+        <tbody id="studentTable"></tbody>
+    </table>
+    <div class="pagination">
+        <button id="prevBtn" onclick="prevPage()">Previous</button>
+        <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+    
+    <footer class="footer">
+        <a href="https://github.com/Krixhnnna" target="_blank"><img src="img/github.png" alt="GitHub"></a>
+        <a href="https://www.linkedin.com/in/krishnapandey01/" target="_blank"><img src="img/linkedin.png" alt="LinkedIn"></a>
+        <a href="https://www.instagram.com/Krixhnnna" target="_blank"><img src="img/instagram.png" alt="Instagram"></a>
+    </footer>
+
+    <script src="main.js"></script>
+
+    <script>
+   document.addEventListener("DOMContentLoaded", function () {
+    let students = [];
+    let filteredData = [];
+    let currentStartIndex = 0;
+    const visibleRows = 20;
+
+    fetch('students23.txt')
+        .then(response => response.text())
+        .then(encodedData => {
+            try {
+                let jsonString = atob(encodedData.trim()); // Decode Base64
+                students = JSON.parse(jsonString); // Parse JSON
+                filteredData = students; // Store all students for search & pagination
+                renderTable();
+            } catch (error) {
+                console.error("Decoding or Parsing Failed:", error);
+            }
+        })
+        .catch(error => console.error("Fetching Failed:", error));
+
+    function renderTable() {
+        let table = document.getElementById("studentTable");
+        table.innerHTML = "";
+        let dataToShow = filteredData.slice(currentStartIndex, currentStartIndex + visibleRows);
+
+        dataToShow.forEach(student => {
+            let row = `<tr>
+                <td>${student.Rank}</td>
+                <td style="white-space: nowrap;" class="nametable">${student.Name}</td>
+                <td>${student.Section}</td>
+                <td>${student.CGPA}</td>
+            </tr>`;
+            table.innerHTML += row;
+        });
+
+        updateButtons();
+    }
+
+    document.getElementById("search").addEventListener("input", function () {
+    let query = this.value.toLowerCase().trim();
+    if (query === "") {
+        filteredData = students; // Reset to full dataset
+    } else {
+        filteredData = students.filter(s =>
+            s.Name.toLowerCase().includes(query) ||
+            s["Reg.No"].toString().includes(query) || s.Section.toLowerCase().includes(query)
+        );
+    }
+    currentStartIndex = 0;
+    renderTable();
+});
+
+
+    function nextPage() {
+        if (currentStartIndex + visibleRows < filteredData.length) {
+            currentStartIndex += visibleRows;
+            renderTable();
+        }
+    }
+
+    function prevPage() {
+        if (currentStartIndex > 0) {
+            currentStartIndex -= visibleRows;
+            renderTable();
+        }
+    }
+
+    function updateButtons() {
+        document.getElementById("prevBtn").disabled = currentStartIndex === 0;
+        document.getElementById("nextBtn").disabled = (currentStartIndex + visibleRows >= filteredData.length);
+    }
+
+    document.getElementById("nextBtn").addEventListener("click", nextPage);
+    document.getElementById("prevBtn").addEventListener("click", prevPage);
+});
+
+    </script>
+</body>
+</html>
